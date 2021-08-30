@@ -1,17 +1,16 @@
-from conans import ConanFile, tools
+from conans import ConanFile, tools, CMake
 from conans.tools import check_min_cppstd
 import os
 
 
-class ConfuJson(ConanFile):
-    name = "confu_json"
-    homepage = "https://github.com/werto87/confu_json"
-    description = "uses boost::fusion to help with serialization; json <-> user defined type"
-    topics = ("json parse", "serialization", "user defined type")
+class RepackedCorrade(ConanFile):
+    name = "repacked_corrade"
+    homepage = "https://github.com/werto87/repacked_corrade"
+    description = "repacked corrade https://github.com/mosra/corrade.git"
+    topics = ("utility", "magnum-dependency")
     license = "BSL-1.0"
-    url = "https://github.com/conan-io/conan-center-index"
+    url = "https://gitlab.com/werto87/conan-the-example"
     settings = "compiler"
-    no_copy_source = True
 
     @property
     def _source_subfolder(self):
@@ -20,20 +19,19 @@ class ConfuJson(ConanFile):
     def configure(self):
         if self.settings.compiler.cppstd:
             check_min_cppstd(self, "20")
-        self.options["boost"].header_only = True
-
-    def requirements(self):
-        self.requires("boost/1.76.0")
 
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
         extracted_dir = self.name + "-" + self.version
         os.rename(extracted_dir, self._source_subfolder)
 
-    def package(self):
-        # This should lead to an Include path like #include "include_folder/IncludeFile.hxx"
-        self.copy("*.h*", dst="include/confu_json",
-                  src="source_subfolder/confu_json")
+    def build(self):
+        cmake = CMake(self)
+        cmake.build()
 
-    def package_id(self):
-        self.info.header_only()
+    def package(self):
+        self.copy("*.h*", dst=f"include/{self.name}",
+                  src=f"{self._source_subfolder()}/{self.name}")
+
+    def package_info(self):
+        self.cpp_info.libs = ["corrade"]
